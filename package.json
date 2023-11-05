@@ -1,0 +1,42 @@
+{
+  "name": "silly-bot",
+  "version": "1.0.1",
+  "description": "A little fun project for personal learning use",
+  "main": "index.js",
+  "scripts": {
+    "dev": "tsx watch src/bot.ts",
+    "start": "node dist/bot.js",
+    "build": "tsup src/bot.ts --minify"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/SillySoon/silly-bot.git"
+  },
+  "bugs": {
+    "url": "https://github.com/SillySoon/silly-bot/issues"
+  },
+  "keywords": [
+    "bot",
+    "silly",
+    "discord"
+  ],
+  "author": "SillySoon <silly@sillysoon.de>",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "^14.13.0",
+    "dotenv": "^16.3.1",
+    "mongodb": "^6.2.0"
+  },
+  "devDependencies": {
+    "@typescript-eslint/eslint-plugin": "^6.9.1",
+    "eslint": "^8.53.0",
+    "eslint-config-standard-with-typescript": "^39.1.1",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-n": "^16.2.0",
+    "eslint-plugin-promise": "^6.1.1",
+    "silly-logger": "^1.3.1",
+    "tsup": "^7.2.0",
+    "tsx": "^3.14.0",
+    "typescript": "^5.2.2"
+  }
+}
