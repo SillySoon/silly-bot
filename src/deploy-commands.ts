@@ -9,7 +9,7 @@ const rest = new REST({ version: "10" }).setToken(config.DISCORD_TOKEN);
 
 export async function deployCommands() {
   try {
-    logger.info("Started refreshing application (/) commands.");
+    logger.deploy("Started refreshing application (/) commands.");
 
     await rest.put(
       Routes.applicationCommands(config.DISCORD_APPLICATION_ID),
@@ -18,7 +18,7 @@ export async function deployCommands() {
       }
     );
 
-    logger.info("Successfully reloaded application (/) commands.");
+    logger.deploy("Successfully reloaded application (/) commands.");
   } catch (error) {
     console.error(error);
   }

@@ -2,6 +2,7 @@ import { Client, ActivityType } from "discord.js";
 import { config } from "./config";
 import { commands } from "./commands";
 import { deployCommands } from "./deploy-commands";
+import { MongoClient } from 'mongodb';
 import * as logger from 'silly-logger';
 
 // Logger configuration
@@ -18,12 +19,35 @@ const client = new Client({
   ],
 });
 
-deployCommands();
+// Connecting to MongoDB
+const dbClient = new MongoClient(String(config.MONGODB_URI));
+(async function dbSetup() {
+	await dbClient.connect();
+	logger.custom('DATABASE', 'gold', '', 'Successfully connected to MongoDB');
+
+  // Try if database exists
+  try {
+		const databases = (await dbClient.db().admin().listDatabases()).databases;
+		let found = false;
+		databases.forEach((database) => {
+			if (database.name === "silly-database") found = true;
+		});
+		if (!found) {
+			throw new Error("Database not existing!");
+		}
+	} catch (err) {
+    logger.custom('DATABASE', 'gold', '', `Database not existing! Please create a mongodb database called 'silly-database' and restart the bot!`);
+		process.exit(1);
+	}
+} ());
 
 // Console log when bot is ready
 client.once("ready", () => {
   if (!client.user) return;
   logger.success(`Ready! Logged in as ${client.user.tag}`);
+
+  // Deploy all commands
+  deployCommands();
 
   // Interval to refresh activity
   setInterval(async () => {
