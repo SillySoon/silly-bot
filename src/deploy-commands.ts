@@ -7,16 +7,12 @@ const commandsData = Object.values(commands).map((command) => command.data);
 
 const rest = new REST({ version: "10" }).setToken(config.DISCORD_TOKEN);
 
-type DeployCommandsProps = {
-  guildId: string;
-};
-
-export async function deployCommands({ guildId }: DeployCommandsProps) {
+export async function deployCommands() {
   try {
     logger.info("Started refreshing application (/) commands.");
 
     await rest.put(
-      Routes.applicationGuildCommands(config.DISCORD_APPLICATION_ID, guildId),
+      Routes.applicationCommands(config.DISCORD_APPLICATION_ID),
       {
         body: commandsData,
       }
