@@ -1,6 +1,6 @@
 {
   "name": "silly-bot",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A little fun project for personal learning use",
   "main": "dist/bot.js",
   "scripts": {

@@ -1,5 +1,5 @@
-import { Client, ActivityType } from "discord.js";
-import { config } from "./config";
+import { Client, ActivityType, Collection } from "discord.js";
+import { config } from "./utils/config";
 import { commands } from "./commands";
 import { deployCommands } from "./deploy-commands";
 import { MongoClient } from 'mongodb';
@@ -36,9 +36,33 @@ const dbClient = new MongoClient(String(config.MONGODB_URI));
 			throw new Error("Database not existing!");
 		}
 	} catch (err) {
-    logger.custom('DATABASE', 'gold', '', `Database not existing! Please create a mongodb database called 'silly-database' and restart the bot!`);
+    logger.error(`Database not existing! Please create a mongodb database called 'silly-database' and restart the bot!`);
 		process.exit(1);
 	}
+
+  // Lookup tables in DB
+  const requiredCollections = ['servers'];
+	const collections = await dbClient.db("silly-database").listCollections().toArray();
+	const collectionsOnServer: string[] = [];
+	const notFound: string[] = [];
+
+	collections.forEach((collection) => {
+		collectionsOnServer.push(collection.name);
+	});
+
+	requiredCollections.forEach((collection) => {
+		if (!collectionsOnServer.includes(collection)) notFound.push(collection);
+	});
+
+	if (notFound.length > 0) {
+		logger.error(`Missing collections: ${notFound.join(', ')}`);
+    logger.custom('DATABASE', 'gold', '', `Creating missing collections...`);
+		notFound.forEach(async (collection) => {
+			dbClient.db("silly-database").createCollection(collection);
+      logger.custom('DATABASE', 'gold', '', `Created collection ${collection}!`);
+		});
+	}
+	logger.success("Database setup complete!\n");
 } ());
 
 // Console log when bot is ready
