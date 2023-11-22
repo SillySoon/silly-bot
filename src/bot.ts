@@ -41,7 +41,7 @@ const dbClient = new MongoClient(String(config.MONGODB_URI));
 	}
 
   // Lookup tables in DB
-  const requiredCollections = ['servers'];
+  const requiredCollections = ['servers', 'users', 'notes'];
 	const collections = await dbClient.db("silly-database").listCollections().toArray();
 	const collectionsOnServer: string[] = [];
 	const notFound: string[] = [];

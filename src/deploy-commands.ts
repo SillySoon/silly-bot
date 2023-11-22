@@ -19,7 +19,7 @@ export async function deployCommands() {
     );
 
     logger.deploy("Successfully reloaded application (/) commands.");
-  } catch (error) {
-    console.error(error);
+  } catch (error: any) {
+    logger.error(error);
   }
 }
