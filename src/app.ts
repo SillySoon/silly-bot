@@ -3,6 +3,7 @@ import { Client, ActivityType, Collection } from "discord.js";
 import { config } from "./utils/config";
 import { commands } from "./commands";
 import { deployCommands } from "./deploy-commands";
+import { db } from "./utils/db";
 import logger from "silly-logger";
 
 // Setup logger
@@ -14,6 +15,9 @@ logger.logFolderPath('./logs');
 const client = new Client({
   intents: ["Guilds", "GuildMessages", "DirectMessages"],
 });
+
+// Setup database
+db.setup();
 
 // Console log when bot is ready
 client.once("ready", () => {

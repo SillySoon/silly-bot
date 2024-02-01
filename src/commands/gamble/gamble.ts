@@ -9,7 +9,6 @@ export const data = new SlashCommandBuilder()
         .setDescription('The amount of points to gamble'));
 
 export async function execute(interaction: CommandInteraction) {
-
     const amount = interaction.options.get('amount')?.value ?? 'No amount provided';
 
     const embed = new EmbedBuilder()
