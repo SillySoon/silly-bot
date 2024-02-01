@@ -1,5 +1,4 @@
 import dotenv from "dotenv";
-
 dotenv.config();
 
 const { DISCORD_TOKEN, DISCORD_APPLICATION_ID, MONGODB_URI } = process.env;
