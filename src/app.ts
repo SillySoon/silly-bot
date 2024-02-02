@@ -14,11 +14,16 @@ logger.logFolderPath("./logs");
 
 // Start up a client
 export const client = new Client({
-  intents: ["Guilds", "GuildMessages", "DirectMessages"],
+  intents: ["Guilds", "GuildMessages", "MessageContent"],
 });
 
 // Setup database
 db.setup();
+
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+  db.addPoints(message.author.id, message.guildId, 10);
+});
 
 // Run command when interaction is created
 client.on("interactionCreate", async (interaction) => {
@@ -29,7 +34,7 @@ client.on("interactionCreate", async (interaction) => {
     try {
       commands[commandName as keyof typeof commands].execute(interaction);
       logger.custom(
-        "INTERACTION",
+        "INTERACTION", 
         "#ffffff",
         "",
         `By ${interaction.member?.user.username} - /${interaction.commandName}`
