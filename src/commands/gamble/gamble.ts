@@ -50,32 +50,28 @@ export async function execute(interaction: CommandInteraction) {
       return interaction.reply({ embeds: [embed], ephemeral: true });
     } else {
       // Gamble the points
-      const embed = new EmbedBuilder()
-        .setColor("#eeeee4")
-        .setTitle(`You gambled points!`);
+      const embed = new EmbedBuilder().setColor("#eeeee4");
 
       // Random number between 1 and 100
       const random = Math.floor(Math.random() * 100) + 1;
 
       // 50% chance of winning
       if (random > 50) {
+        embed.setTitle(`<:positive:1203089362833768468> You won!`);
         embed.setDescription(
-          `You won ${amount} points!\nYou now have ${
+          `You have won ${amount} cookies!\nYou now have ${
             points + Number(amount)
-          } points!`
+          } cookies in your balance!`
         );
         db.addPoints(interaction.user.id, interaction.guildId, Number(amount));
       } else {
+        embed.setTitle(`<:negative:1203089360644476938> You lost!`);
         embed.setDescription(
-          `You lost ${amount} points!\nYou now have ${
+          `You have lost ${amount} cookies!\nYou now have ${
             points - Number(amount)
-          } points!`
+          } cookies in your balance!`
         );
-        db.addPoints(
-          interaction.user.id,
-          interaction.guildId,
-          points - Number(amount)
-        );
+        db.addPoints(interaction.user.id, interaction.guildId, Number(-amount));
       }
 
       return interaction.reply({ embeds: [embed] });

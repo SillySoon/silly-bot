@@ -112,28 +112,26 @@ async function addPoints(
   }
 }
 
-/*
-async function addPoints(userId: string, points: number) {
-  const user = await dbClient
+// Get top points
+async function getTopPoints(guildId: string | null, limit: number) {
+  const users = await dbClient
     .db("silly-database")
     .collection("user")
-    .findOne({ userId: userId });
-  if (user) {
-    await dbClient
-      .db("silly-database")
-      .collection("user")
-      .updateOne({ userId: userId }, { $set: { points: points } });
-  } else {
-    await dbClient
-      .db("silly-database")
-      .collection("user")
-      .insertOne({ userId: userId, points: points });
-  }
+    .find({ "points.guild": guildId })
+    .sort({ "points.value": -1 })
+    .limit(limit)
+    .toArray();
+  return users.map((user) => {
+    return {
+      userId: user.userId,
+      points: user.points.find((point: any) => point.guild === guildId).value,
+    };
+  });
 }
-*/
 
 export const db = {
   setup,
   getPoints,
   addPoints,
+  getTopPoints,
 };

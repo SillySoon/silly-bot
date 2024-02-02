@@ -81,4 +81,16 @@ client.once("ready", () => {
   client.user.setActivity(`v${version}`, { type: ActivityType.Watching });
 });
 
+// check every 10 minutes if someone is in a voice chat and give them points
+setInterval(() => {
+  client.guilds.cache.forEach(async (guild) => {
+    guild.members.cache.forEach(async (member) => {
+      if (member.voice.channel) {
+        db.addPoints(member.id, guild.id, 100);
+        logger.custom("VOICE", "#ffffff", "", `Gave 100 points to ${member.user.username}`);
+      }
+    });
+  });
+}, 10 * 60 * 1000);
+
 client.login(config.DISCORD_TOKEN);
