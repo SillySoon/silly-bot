@@ -41,6 +41,13 @@ export async function execute(interaction: CommandInteraction) {
         );
 
       return interaction.reply({ embeds: [embed], ephemeral: true });
+    } else if (Number(amount) <= 0) {
+      const embed = new EmbedBuilder()
+        .setColor("#eeeee4")
+        .setTitle("Invalid amount!")
+        .setDescription("You can't gamble less or equal then 0 points!");
+
+      return interaction.reply({ embeds: [embed], ephemeral: true });
     } else {
       // Gamble the points
       const embed = new EmbedBuilder()
