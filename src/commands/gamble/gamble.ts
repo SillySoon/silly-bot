@@ -55,7 +55,7 @@ export async function execute(interaction: CommandInteraction) {
       // Random number between 1 and 100
       const random = Math.floor(Math.random() * 100) + 1;
 
-      // 50% chance of winning
+      // 50% chance of winning, 1% Special Double win
       if (random > 50) {
         embed.setTitle(`<:positive:1203089362833768468> You won!`);
         embed.setDescription(
@@ -64,6 +64,18 @@ export async function execute(interaction: CommandInteraction) {
           } cookies in your balance!`
         );
         db.addPoints(interaction.user.id, interaction.guildId, Number(amount));
+      } else if (random === 1) {
+        embed.setTitle(`<:special:1203137023196663908> Special Win! (4x)`);
+        embed.setDescription(
+          `You have won ${Number(amount) * 4} cookies!\nYou now have ${
+            points + Number(amount) * 4
+          } cookies in your balance!`
+        );
+        db.addPoints(
+          interaction.user.id,
+          interaction.guildId,
+          Number(amount) * 2
+        );
       } else {
         embed.setTitle(`<:negative:1203089360644476938> You lost!`);
         embed.setDescription(
