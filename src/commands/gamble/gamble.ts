@@ -74,7 +74,7 @@ export async function execute(interaction: CommandInteraction) {
         db.addPoints(
           interaction.user.id,
           interaction.guildId,
-          Number(amount) * 2
+          Number(amount) * 4
         );
       } else {
         embed.setTitle(`<:negative:1203089360644476938> You lost!`);
