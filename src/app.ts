@@ -20,9 +20,43 @@ export const client = new Client({
 // Setup database
 db.setup();
 
+// Add points to user when they send a message
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
   db.addPoints(message.author.id, message.guildId, 10);
+});
+
+// Add counting on specific channel for specific guild
+client.on("messageCreate", async (message) => {
+  if (message.author.bot) return;
+
+  // if message is not a number return
+  if (isNaN(parseInt(message.content))) return;
+  
+  const guild = await db.getGuild(message.guildId);
+  if (guild == null) return;
+  if (!guild.counting.active || guild.counting.channel != message.channelId) return;
+
+  const countingValue = guild.counting.value;
+  const messageContent = message.content;
+  // if user is the same as the counting user fail the message
+  if (message.author.id == guild.counting.user) {
+    message.react("<:negative:1203089360644476938>");
+    await message.reply('You can\'t count twice in a row! The counting has been reset. Start from 1 again!');
+    db.setCountingValue(message.guildId, 1);
+    db.setCountingUser(message.guildId, "");
+    return;
+  } else if (messageContent != countingValue.toString()) {
+    message.react("<:negative:1203089360644476938>");
+    await message.reply('You broke the counting! The counting has been reset. Start from 1 again!');
+    db.setCountingValue(message.guildId, 1);
+    db.setCountingUser(message.guildId, "");
+  } else {
+    message.react("<:positive:1203089362833768468>");
+    db.addPoints(message.author.id, message.guildId, 5);
+    db.setCountingValue(message.guildId, countingValue + 1);
+    db.setCountingUser(message.guildId, message.author.id);
+  }
 });
 
 // Run command when interaction is created
@@ -86,11 +120,24 @@ setInterval(() => {
   client.guilds.cache.forEach(async (guild) => {
     guild.members.cache.forEach(async (member) => {
       if (member.voice.channel) {
-        db.addPoints(member.id, guild.id, 100);
-        logger.custom("VOICE", "#ffffff", "", `Gave 100 points to ${member.user.username}`);
+        db.addPoints(member.id, guild.id, 30);
+        logger.custom("VOICE", "#7EF0E0", "", `Gave 30 points to ${member.user.username}`);
       }
     });
   });
 }, 10 * 60 * 1000);
 
+// Event when client joins guild
+client.on("guildCreate", (guild) => {
+  db.addGuild(guild.id);
+  logger.custom("GUILD", "#F2B75C", "", `Joined guild ${guild.name}`);
+});
+
+// Event when client leaves guild
+client.on("guildDelete", (guild) => {
+  db.deleteGuild(guild.id);
+  logger.custom("GUILD", "#F2B75C", "", `Left guild ${guild.name}`);
+});
+
+// Login to Discord
 client.login(config.DISCORD_TOKEN);

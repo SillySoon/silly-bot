@@ -129,9 +129,122 @@ async function getTopPoints(guildId: string | null, limit: number) {
   });
 }
 
+/* Guild Setup
+guildId: "1143902394871201924"
+counting {
+  active: true,
+  channel: "1143910892522717284",
+  value: 0
+  user: "421772263864401921"
+}
+*/
+
+// get guild counting from database
+async function getGuild(guildId: string | null) {
+  return await dbClient
+    .db("silly-database")
+    .collection("guild")
+    .findOne({ guildId: guildId });
+}
+
+
+// Add guild to database
+async function addGuild(guildId: string) {
+  let template = {
+    guildId: guildId,
+    counting: {
+      active: false,
+      channel: "",
+      value: 1,
+      user: "",
+    },
+  };
+
+  await dbClient
+    .db("silly-database")
+    .collection("guild")
+    .insertOne({ template });
+}
+
+// delete guild from database
+async function deleteGuild(guildId: string) {
+  await dbClient
+    .db("silly-database")
+    .collection("guild")
+    .deleteOne({ guildId: guildId });
+}
+
+// Change counting status
+async function setCountingStatus(
+  guildId: string,
+  active: boolean
+) {
+  await dbClient
+    .db("silly-database")
+    .collection("guild")
+    .updateOne(
+      { guildId: guildId },
+      { $set: { "counting.active": active } },
+      { upsert: true }
+    );
+}
+
+// change counting channel
+async function setCountingChannel(
+  guildId: string,
+  channel: string
+) {
+  await dbClient
+    .db("silly-database")
+    .collection("guild")
+    .updateOne(
+      { guildId: guildId },
+      { $set: { "counting.channel": channel } },
+      { upsert: true }
+    );
+}
+
+// change counting value
+async function setCountingValue(
+  guildId: string | null,
+  value: number
+) {
+  await dbClient
+    .db("silly-database")
+    .collection("guild")
+    .updateOne(
+      { guildId: guildId },
+      { $set: { "counting.value": value } },
+      { upsert: true }
+    );
+}
+
+// set user for counting
+async function setCountingUser(
+  guildId: string | null,
+  userId: string
+) {
+  await dbClient
+    .db("silly-database")
+    .collection("guild")
+    .updateOne(
+      { guildId: guildId },
+      { $set: { "counting.user": userId } },
+      { upsert: true }
+    );
+}
+
+
 export const db = {
   setup,
   getPoints,
   addPoints,
   getTopPoints,
+  getGuild,
+  addGuild,
+  deleteGuild,
+  setCountingStatus,
+  setCountingChannel,
+  setCountingValue,
+  setCountingUser,
 };
