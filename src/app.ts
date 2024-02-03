@@ -26,19 +26,37 @@ client.on("messageCreate", async (message) => {
   db.addPoints(message.author.id, message.guildId, 10);
 });
 
+// Math regex
+function calcSymboles(str: string) {
+const mathSymbolsRegex = /^[0-9+\-*/]+$/;
+return mathSymbolsRegex.test(str);
+}
+
+// Calculation of math
+function calcMath(str: string) {
+  if (!calcSymboles(str)) {
+      return 'Invalid math expression';
+  }
+  try {
+      return eval(str);
+  } catch (error) {
+      return 'Error occurred while evaluating the expression';
+  }
+}
+
 // Add counting on specific channel for specific guild
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
 
   // if message is not a number return
   if (isNaN(parseInt(message.content))) return;
+  const messageContent = calcMath(message.content)
+  // console.log(messageContent);
   
   const guild = await db.getGuild(message.guildId);
-  if (guild == null) return;
-  if (!guild.counting.active || guild.counting.channel != message.channelId) return;
+  if (guild == null || !guild.counting.active || guild.counting.channel != message.channelId || isNaN(messageContent)) return;
 
   const countingValue = guild.counting.value;
-  const messageContent = message.content;
   // if user is the same as the counting user fail the message
   if (message.author.id == guild.counting.user) {
     message.react("<:negative:1203089360644476938>");
