@@ -28,19 +28,20 @@ client.on("messageCreate", async (message) => {
 
 // Math regex
 function calcSymboles(str: string) {
-const mathSymbolsRegex = /^[0-9+\-*/]+$/;
-return mathSymbolsRegex.test(str);
+  const mathSymbolsRegex = /^[0-9+\-*/]+$/;
+  return mathSymbolsRegex.test(str);
 }
 
 // Calculation of math
 function calcMath(str: string) {
   if (!calcSymboles(str)) {
-      return 'Invalid math expression';
+    return "Invalid math expression";
   }
   try {
-      return eval(str);
+    const result = new Function(`return ${str}`)();
+    return result;
   } catch (error) {
-      return 'Error occurred while evaluating the expression';
+    return "Error occurred while evaluating the expression";
   }
 }
 
@@ -50,23 +51,33 @@ client.on("messageCreate", async (message) => {
 
   // if message is not a number return
   if (isNaN(parseInt(message.content))) return;
-  const messageContent = calcMath(message.content)
+  const messageContent = calcMath(message.content);
   // console.log(messageContent);
-  
+
   const guild = await db.getGuild(message.guildId);
-  if (guild == null || !guild.counting.active || guild.counting.channel != message.channelId || isNaN(messageContent)) return;
+  if (
+    guild == null ||
+    !guild.counting.active ||
+    guild.counting.channel != message.channelId ||
+    isNaN(messageContent)
+  )
+    return;
 
   const countingValue = guild.counting.value;
   // if user is the same as the counting user fail the message
   if (message.author.id == guild.counting.user) {
     message.react("<:negative:1203089360644476938>");
-    await message.reply('You can\'t count twice in a row! The counting has been reset. Start from 1 again!');
+    await message.reply(
+      "You can't count twice in a row! The counting has been reset. Start from 1 again!"
+    );
     db.setCountingValue(message.guildId, 1);
     db.setCountingUser(message.guildId, "");
     return;
   } else if (messageContent != countingValue.toString()) {
     message.react("<:negative:1203089360644476938>");
-    await message.reply('You broke the counting! The counting has been reset. Start from 1 again!');
+    await message.reply(
+      "You broke the counting! The counting has been reset. Start from 1 again!"
+    );
     db.setCountingValue(message.guildId, 1);
     db.setCountingUser(message.guildId, "");
   } else {
@@ -86,7 +97,7 @@ client.on("interactionCreate", async (interaction) => {
     try {
       commands[commandName as keyof typeof commands].execute(interaction);
       logger.custom(
-        "INTERACTION", 
+        "INTERACTION",
         "#ffffff",
         "",
         `By ${interaction.member?.user.username} - /${interaction.commandName}`
@@ -139,7 +150,12 @@ setInterval(() => {
     guild.members.cache.forEach(async (member) => {
       if (member.voice.channel) {
         db.addPoints(member.id, guild.id, 30);
-        logger.custom("VOICE", "#7EF0E0", "", `Gave 30 points to ${member.user.username}`);
+        logger.custom(
+          "VOICE",
+          "#7EF0E0",
+          "",
+          `Gave 30 points to ${member.user.username}`
+        );
       }
     });
   });
