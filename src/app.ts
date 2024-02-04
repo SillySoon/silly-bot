@@ -14,7 +14,7 @@ logger.logFolderPath("./logs");
 
 // Start up a client
 export const client = new Client({
-  intents: ["Guilds", "GuildMessages", "MessageContent"],
+  intents: ["Guilds", "GuildMessages", "MessageContent", "GuildVoiceStates"],
 });
 
 // Setup database
@@ -147,8 +147,9 @@ client.once("ready", () => {
 // check every 10 minutes if someone is in a voice chat and give them points
 setInterval(() => {
   client.guilds.cache.forEach(async (guild) => {
-    guild.members.cache.forEach(async (member) => {
-      if (member.voice.channel) {
+    guild.voiceStates.cache.forEach(voiceState => {
+      const member = voiceState.member;
+      if (member) {
         db.addPoints(member.id, guild.id, 30);
         logger.custom(
           "VOICE",
