@@ -67,7 +67,7 @@ client.on("messageCreate", async (message) => {
 
   // if channel is not the counting channel return
   console.log(guild.modules[1].channel);
-  if (message.channelId != guild.modules.counting.channel) return;
+  if (message.channelId != guild.modules[1].channel) return;
 
   // get counting value and user
   const counting = await db.guild.modules.counting.get(message.guildId);
