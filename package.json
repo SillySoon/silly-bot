@@ -1,6 +1,6 @@
 {
   "name": "silly-bot",
-  "version": "1.0.15",
+  "version": "1.0.16",
   "description": "A little discord bot project",
   "main": "index.js",
   "scripts": {

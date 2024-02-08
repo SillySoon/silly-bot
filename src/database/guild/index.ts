@@ -55,8 +55,10 @@ async function remove(guildId: string) {
 
 // Export functions
 import { member } from "./member";
+import { modules } from "./modules";
 
 export const guild = {
+    modules,
     member,
     get,
     add,

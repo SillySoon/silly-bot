@@ -26,7 +26,7 @@ db.setup();
 // Add points to user when they send a message
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
-  db.points.add(message.author.id, message.guildId, 10);
+  db.guild.member.points.add(message.guildId, message.author.id, 10);
 });
 
 // Math regex
@@ -58,30 +58,34 @@ client.on("messageCreate", async (message) => {
   // console.log(messageContent);
 
   const guild = await db.guild.get(message.guildId);
-  if (guild == null || !guild.counting.active || guild.counting.channel != message.channelId || isNaN(messageContent)) return;
+  if (!guild) return;
 
-  const countingValue = guild.counting.value;
+  const counting = await db.guild.modules.counting.get(message.guildId);
+  let countingValue = counting.value;
+  let countingChannel = counting.channel;
+  let countingUser = counting.user;
+
   // if user is the same as the counting user fail the message
-  if (message.author.id == guild.counting.user) {
+  if (message.author.id == countingUser) {
     message.react("<:negative:1203089360644476938>");
     await message.reply(
       "You can't count twice in a row! The counting has been reset. Start from 1 again!"
     );
-    db.counting.setValue(message.guildId, 1);
-    db.counting.setUser(message.guildId, "");
+    db.guild.modules.counting.changeValue(message.guildId, 1);
+    db.guild.modules.counting.changeUser(message.guildId, "");
     return;
   } else if (messageContent != countingValue.toString()) {
     message.react("<:negative:1203089360644476938>");
     await message.reply(
       "You broke the counting! The counting has been reset. Start from 1 again!"
     );
-    db.counting.setValue(message.guildId, 1);
-    db.counting.setUser(message.guildId, "");
+    db.guild.modules.counting.changeValue(message.guildId, 1);
+    db.guild.modules.counting.changeUser(message.guildId, "");
   } else {
     message.react("<:positive:1203089362833768468>");
-    db.points.add(message.author.id, message.guildId, 5);
-    db.counting.setValue(message.guildId, countingValue + 1);
-    db.counting.setUser(message.guildId, message.author.id);
+    db.guild.member.points.add(message.guildId, message.author.id, 5);
+    db.guild.modules.counting.changeValue(message.guildId, countingValue + 1);
+    db.guild.modules.counting.changeUser(message.guildId, message.author.id);
   }
 });
 
@@ -141,13 +145,13 @@ client.once("ready", () => {
   client.user.setActivity(`v${version}`, { type: ActivityType.Watching });
 });
 
-// check every 10 minutes if someone is in a voice chat and give them points
+/* check every 10 minutes if someone is in a voice chat and give them points
 setInterval(() => {
   client.guilds.cache.forEach(async (guild) => {
     guild.voiceStates.cache.forEach(voiceState => {
       const member = voiceState.member;
       if (member) {
-        db.points.add(member.id, guild.id, 30);
+        db.guild.member.points.add(guild.id, member.id, 30);
         logger.custom(
           "VOICE",
           "#7EF0E0",
@@ -158,6 +162,7 @@ setInterval(() => {
     });
   });
 }, 10 * 60 * 1000);
+*/
 
 // Event when client joins guild
 client.on("guildCreate", (guild) => {
