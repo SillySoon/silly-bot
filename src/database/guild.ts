@@ -1,33 +1,6 @@
 import { dbClient, dbName } from "./mongo";
 import { logger } from "silly-logger";
-
-import { member } from "./guild_member";
-
-// Guild template
-export interface template_guild {
-    id: string | null;
-    members: Array<template_user> | null,
-    modules: [
-        {
-            name: "points",
-            enable: boolean,
-        },
-        { 
-            name: "counting",
-            enable: boolean,
-            channel: string | null,
-            value: number,
-            user: string | null,
-        },
-    ],
-};
-
-// User template
-export interface template_user {
-    id: string,
-    points: number,
-};
-
+import { template_guild } from "../types";
 
 // get guild counting from database
 async function get(guildId: string | null) {
@@ -72,6 +45,9 @@ async function remove(guildId: string) {
         logger.error(`Error occurred while removing guild from database:\n ${err}`);
     }
 }
+
+// Export functions
+import { member } from "./guild_member";
 
 export const guild = {
     member,

@@ -1,7 +1,7 @@
 import { dbClient, dbName } from "./mongo";
 import { logger } from "silly-logger";
 
-import { template_user } from "./guild";
+import { template_user } from "../types";
 
 // add member to guild
 async function add(guildId: string | null, userId: string) {
