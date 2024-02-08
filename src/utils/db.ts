@@ -4,17 +4,28 @@ import logger from "silly-logger";
 
 // Connecting to MongoDB
 const dbClient = new MongoClient(String(config.MONGODB_URI));
+let dbName: string;
 
 async function setup() {
   await dbClient.connect();
   logger.custom("DATABASE", "gold", "", "Successfully connected to MongoDB");
+
+  if (!config.MONGODB_DB_NAME) {
+    config.MONGODB_DB_NAME = "silly-database";
+    logger.warn(
+      `MONGODB_DB_NAME not found in .env, using default value: ${config.MONGODB_DB_NAME}`
+    );
+  }
 
   // Try if database exists
   try {
     const databases = (await dbClient.db().admin().listDatabases()).databases;
     let found = false;
     databases.forEach((database) => {
-      if (database.name === "silly-database") found = true;
+      if (database.name === config.MONGODB_DB_NAME) {
+        found = true;
+        dbName = database.name;
+      } 
     });
     if (!found) {
       throw new Error("Database not existing!");
@@ -26,10 +37,12 @@ async function setup() {
     process.exit(1);
   }
 
+  logger.custom("DATABASE", "gold", "", `Connected to database ${dbName}`);
+
   // Lookup tables in DB
-  const requiredCollections = ["user"];
+  const requiredCollections = ["user", "guild"];
   const collections = await dbClient
-    .db("silly-database")
+    .db(dbName)
     .listCollections()
     .toArray();
   const collectionsOnServer: string[] = [];
@@ -47,7 +60,7 @@ async function setup() {
     logger.error(`Missing collections: ${notFound.join(", ")}`);
     logger.custom("DATABASE", "gold", "", `Creating missing collections...`);
     notFound.forEach(async (collection) => {
-      dbClient.db("silly-database").createCollection(collection);
+      dbClient.db(dbName).createCollection(collection);
       logger.custom(
         "DATABASE",
         "gold",
@@ -72,7 +85,7 @@ points: [
 
 async function getPoints(userId: string, guildId: string | null) {
   const user = await dbClient
-    .db("silly-database")
+    .db(dbName)
     .collection("user")
     .findOne({ userId: userId });
   return user?.points.find((point: any) => point.guild === guildId)?.value ?? 0;
@@ -84,7 +97,7 @@ async function addPoints(
   points: number
 ) {
   const user = await dbClient
-    .db("silly-database")
+    .db(dbName)
     .collection("user")
     .findOne({ userId: userId });
   if (user) {
@@ -98,12 +111,12 @@ async function addPoints(
       user.points[index].value += points;
     }
     await dbClient
-      .db("silly-database")
+      .db(dbName)
       .collection("user")
       .updateOne({ userId: userId }, { $set: { points: user.points } });
   } else {
     await dbClient
-      .db("silly-database")
+      .db(dbName)
       .collection("user")
       .insertOne({
         userId: userId,
@@ -115,7 +128,7 @@ async function addPoints(
 // Get top points
 async function getTopPoints(guildId: string | null, limit: number) {
   const users = await dbClient
-    .db("silly-database")
+    .db(dbName)
     .collection("user")
     .find({ "points.guild": guildId })
     .sort({ "points.value": -1 })
@@ -142,7 +155,7 @@ counting {
 // get guild counting from database
 async function getGuild(guildId: string | null) {
   return await dbClient
-    .db("silly-database")
+    .db(dbName)
     .collection("guild")
     .findOne({ guildId: guildId });
 }
@@ -161,7 +174,7 @@ async function addGuild(guildId: string) {
   };
 
   await dbClient
-    .db("silly-database")
+    .db(dbName)
     .collection("guild")
     .insertOne({ template });
 }
@@ -169,7 +182,7 @@ async function addGuild(guildId: string) {
 // delete guild from database
 async function deleteGuild(guildId: string) {
   await dbClient
-    .db("silly-database")
+    .db(dbName)
     .collection("guild")
     .deleteOne({ guildId: guildId });
 }
@@ -180,7 +193,7 @@ async function setCountingStatus(
   active: boolean
 ) {
   await dbClient
-    .db("silly-database")
+    .db(dbName)
     .collection("guild")
     .updateOne(
       { guildId: guildId },
@@ -195,7 +208,7 @@ async function setCountingChannel(
   channel: string
 ) {
   await dbClient
-    .db("silly-database")
+    .db(dbName)
     .collection("guild")
     .updateOne(
       { guildId: guildId },
@@ -210,7 +223,7 @@ async function setCountingValue(
   value: number
 ) {
   await dbClient
-    .db("silly-database")
+    .db(dbName)
     .collection("guild")
     .updateOne(
       { guildId: guildId },
@@ -225,7 +238,7 @@ async function setCountingUser(
   userId: string
 ) {
   await dbClient
-    .db("silly-database")
+    .db(dbName)
     .collection("guild")
     .updateOne(
       { guildId: guildId },
