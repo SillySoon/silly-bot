@@ -3,7 +3,7 @@ import { Client, ActivityType, Collection } from "discord.js";
 import { commands } from "./commands";
 import { deployCommands } from "./deploy-commands";
 import { config } from "./utils/config";
-import { db } from "./utils/db";
+import { db } from "./database";
 import { version } from "../package.json";
 import logger from "silly-logger";
 
@@ -12,9 +12,12 @@ logger.timeFormat("MMM Do YY - h:mm:ss a");
 logger.enableLogFiles(true);
 logger.logFolderPath("./logs");
 
+// Log current bot version
+logger.deploy(`Welcome! This is bot Version: v${version}`);
+
 // Start up a client
 export const client = new Client({
-  intents: ["Guilds", "GuildMessages", "MessageContent", "GuildVoiceStates"],
+  intents: ["Guilds", "GuildMessages", "MessageContent", "GuildVoiceStates", "GuildMembers"],
 });
 
 // Setup database
@@ -23,7 +26,7 @@ db.setup();
 // Add points to user when they send a message
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
-  db.addPoints(message.author.id, message.guildId, 10);
+  db.guild.member.points.add(message.guildId, message.author.id, 10);
 });
 
 // Math regex
@@ -54,37 +57,34 @@ client.on("messageCreate", async (message) => {
   const messageContent = calcMath(message.content);
   // console.log(messageContent);
 
-  const guild = await db.getGuild(message.guildId);
-  if (
-    guild == null ||
-    !guild.counting.active ||
-    guild.counting.channel != message.channelId ||
-    isNaN(messageContent)
-  )
-    return;
+  const guild = await db.guild.get(message.guildId);
+  if (!guild) return;
 
-  const countingValue = guild.counting.value;
+  const counting = await db.guild.modules.counting.get(message.guildId);
+  let countingValue = counting.value;
+  let countingUser = counting.user;
+
   // if user is the same as the counting user fail the message
-  if (message.author.id == guild.counting.user) {
+  if (message.author.id == countingUser) {
     message.react("<:negative:1203089360644476938>");
     await message.reply(
       "You can't count twice in a row! The counting has been reset. Start from 1 again!"
     );
-    db.setCountingValue(message.guildId, 1);
-    db.setCountingUser(message.guildId, "");
+    db.guild.modules.counting.changeValue(message.guildId, 1);
+    db.guild.modules.counting.changeUser(message.guildId, "");
     return;
   } else if (messageContent != countingValue.toString()) {
     message.react("<:negative:1203089360644476938>");
     await message.reply(
       "You broke the counting! The counting has been reset. Start from 1 again!"
     );
-    db.setCountingValue(message.guildId, 1);
-    db.setCountingUser(message.guildId, "");
+    db.guild.modules.counting.changeValue(message.guildId, 1);
+    db.guild.modules.counting.changeUser(message.guildId, "");
   } else {
     message.react("<:positive:1203089362833768468>");
-    db.addPoints(message.author.id, message.guildId, 5);
-    db.setCountingValue(message.guildId, countingValue + 1);
-    db.setCountingUser(message.guildId, message.author.id);
+    db.guild.member.points.add(message.guildId, message.author.id, 5);
+    db.guild.modules.counting.changeValue(message.guildId, countingValue + 1);
+    db.guild.modules.counting.changeUser(message.guildId, message.author.id);
   }
 });
 
@@ -142,15 +142,38 @@ client.once("ready", () => {
 
   // Kickstart activity
   client.user.setActivity(`v${version}`, { type: ActivityType.Watching });
+
+  try {
+    // Fetch all guilds and members
+    client.guilds.cache.forEach(async (guild) => {
+      await db.guild.add(guild.id);
+
+      guild.members.fetch().then((members) => {
+        members.forEach(async (member) => {
+          await db.guild.member.add(guild.id, member.id);
+        });
+      });
+    });
+  } catch (error: any) {
+    logger.error(error);
+  } finally {
+    logger.deploy("All guilds and members fetched");
+  }
 });
 
-// check every 10 minutes if someone is in a voice chat and give them points
+// Event when member joins guild
+client.on("guildMemberAdd", async (member) => {
+  await db.guild.member.add(member.guild.id, member.id);
+  logger.custom("GUILD", "#F2B75C", "", `Member joined ${member.user.username}`);
+});
+
+/* check every 10 minutes if someone is in a voice chat and give them points
 setInterval(() => {
   client.guilds.cache.forEach(async (guild) => {
     guild.voiceStates.cache.forEach(voiceState => {
       const member = voiceState.member;
       if (member) {
-        db.addPoints(member.id, guild.id, 30);
+        db.guild.member.points.add(guild.id, member.id, 30);
         logger.custom(
           "VOICE",
           "#7EF0E0",
@@ -161,16 +184,22 @@ setInterval(() => {
     });
   });
 }, 10 * 60 * 1000);
+*/
 
 // Event when client joins guild
 client.on("guildCreate", (guild) => {
-  db.addGuild(guild.id);
+  db.guild.add(guild.id);
+  guild.members.fetch().then((members) => {
+    members.forEach(async (member) => {
+      await db.guild.member.add(guild.id, member.id);
+    });
+  });
   logger.custom("GUILD", "#F2B75C", "", `Joined guild ${guild.name}`);
 });
 
 // Event when client leaves guild
 client.on("guildDelete", (guild) => {
-  db.deleteGuild(guild.id);
+  db.guild.remove(guild.id);
   logger.custom("GUILD", "#F2B75C", "", `Left guild ${guild.name}`);
 });
 

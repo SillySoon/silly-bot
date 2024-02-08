@@ -1,6 +1,6 @@
 {
   "name": "silly-bot",
-  "version": "1.0.10",
+  "version": "1.1.0",
   "description": "A little discord bot project",
   "main": "index.js",
   "scripts": {
@@ -15,7 +15,6 @@
   },
   "devDependencies": {
     "@types/node": "^20.11.16",
-    "@types/sqlite3": "^3.1.11",
     "@typescript-eslint/eslint-plugin": "^6.9.1",
     "@typescript-eslint/parser": "^6.9.1",
     "eslint": "^8.56.0",
