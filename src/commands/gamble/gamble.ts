@@ -31,7 +31,7 @@ export async function execute(interaction: CommandInteraction) {
   }
 
   // Get the user's points
-  db.points.get(interaction.user.id, interaction.guildId).then((points) => {
+  db.guild.member.points.get(interaction.guildId, interaction.user.id).then((points) => {
     if (points < amount) {
       const embed = new EmbedBuilder()
         .setColor("#eeeee4")
@@ -63,7 +63,7 @@ export async function execute(interaction: CommandInteraction) {
             points + Number(amount)
           } cookies in your balance!`
         );
-        db.points.add(interaction.user.id, interaction.guildId, Number(amount));
+        db.guild.member.points.add(interaction.guildId, interaction.user.id, Number(amount));
       } else if (random === 1) {
         embed.setTitle(`<:special:1203137023196663908> Special Win! (4x)`);
         embed.setDescription(
@@ -71,11 +71,7 @@ export async function execute(interaction: CommandInteraction) {
             points + Number(amount) * 4
           } cookies in your balance!`
         );
-        db.points.add(
-          interaction.user.id,
-          interaction.guildId,
-          Number(amount) * 4
-        );
+        db.guild.member.points.add(interaction.guildId, interaction.user.id, Number(amount) * 4);
       } else {
         embed.setTitle(`<:negative:1203089360644476938> You lost!`);
         embed.setDescription(
@@ -83,7 +79,7 @@ export async function execute(interaction: CommandInteraction) {
             points - Number(amount)
           } cookies in your balance!`
         );
-        db.points.add(interaction.user.id, interaction.guildId, Number(-amount));
+        db.guild.member.points.add(interaction.guildId, interaction.user.id, Number(-amount));
       }
 
       return interaction.reply({ embeds: [embed] });

@@ -1,9 +1,4 @@
-import {
-  CommandInteraction,
-  SlashCommandBuilder,
-  EmbedBuilder,
-  CacheType,
-} from "discord.js";
+import { CommandInteraction, SlashCommandBuilder, EmbedBuilder } from "discord.js";
 import { db } from "../../database";
 
 export const data = new SlashCommandBuilder()
@@ -29,9 +24,18 @@ export async function execute(interaction: CommandInteraction) {
 }
 
 async function cookieLeaderboard(interaction: CommandInteraction) {
-  const users = await db.points.getTop(interaction.guildId, 10);
+  // Get the top 10 users with the most points
+  const users = await db.guild.member.points.getTop(interaction.guildId, 10);
 
-  const embed = new EmbedBuilder()
+  if (!users) {
+    const embed = new EmbedBuilder()
+      .setColor("#eeeee4")
+      .setTitle("Cookie Leaderboard")
+      .setDescription("No one has any cookies yet!");
+
+    return interaction.reply({ embeds: [embed], ephemeral: true });
+  } else {
+    const embed = new EmbedBuilder()
     .setColor("#eeeee4")
     .setTitle("Cookie Leaderboard")
     // Add the top 10 users to the embed
@@ -40,13 +44,13 @@ async function cookieLeaderboard(interaction: CommandInteraction) {
       users
         .map((user, index) => {
           if (index === 0) {
-            return `🥇 <@${user.userId}>: \`${user.points}\``;
+            return `🥇 <@${user.id}>: \`${user.points}\``;
           } else if (index === 1) {
-            return `🥈 <@${user.userId}>: \`${user.points}\``;
+            return `🥈 <@${user.id}>: \`${user.points}\``;
           } else if (index === 2) {
-            return `🥉 <@${user.userId}>: \`${user.points}\``;
+            return `🥉 <@${user.id}>: \`${user.points}\``;
           } else {
-            return `**#${index + 1}** <@${user.userId}>: \`${user.points}\``;
+            return `**#${index + 1}** <@${user.id}>: \`${user.points}\``;
           }
         })
         .join("\n")
@@ -54,4 +58,5 @@ async function cookieLeaderboard(interaction: CommandInteraction) {
   
 
   await interaction.reply({ embeds: [embed] });
+  }
 }
