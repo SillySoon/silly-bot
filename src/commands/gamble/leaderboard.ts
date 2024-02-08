@@ -6,10 +6,10 @@ export const data = new SlashCommandBuilder()
   .setDescription("See the leaderboard of all cookies!")
   .addStringOption(option =>
 		option.setName('category')
-			.setDescription('cookies')
+			.setDescription('points')
 			.setRequired(true)
 			.addChoices(
-				{ name: 'Cookies', value: 'cookies' },
+				{ name: 'Points', value: 'points' },
 			));
 
 export async function execute(interaction: CommandInteraction) {
@@ -17,7 +17,7 @@ export async function execute(interaction: CommandInteraction) {
   const category: any = interaction.options.get('category');
 
   switch (category.value) {
-    case 'cookies':
+    case 'points':
       await cookieLeaderboard(interaction);
       break;
   }
@@ -30,14 +30,14 @@ async function cookieLeaderboard(interaction: CommandInteraction) {
   if (!users) {
     const embed = new EmbedBuilder()
       .setColor("#eeeee4")
-      .setTitle("Cookie Leaderboard")
-      .setDescription("No one has any cookies yet!");
+      .setTitle("Points Leaderboard")
+      .setDescription("No one has any points yet!");
 
     return interaction.reply({ embeds: [embed], ephemeral: true });
   } else {
     const embed = new EmbedBuilder()
     .setColor("#eeeee4")
-    .setTitle("Cookie Leaderboard")
+    .setTitle("Points Leaderboard")
     // Add the top 10 users to the embed
     // Add Emotes to 1st, 2nd, and 3rd place (🥇, 🥈, 🥉)
     .setDescription(

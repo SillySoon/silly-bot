@@ -17,7 +17,7 @@ logger.deploy(`Welcome! This is bot Version: v${version}`);
 
 // Start up a client
 export const client = new Client({
-  intents: ["Guilds", "GuildMessages", "MessageContent", "GuildVoiceStates"],
+  intents: ["Guilds", "GuildMessages", "MessageContent", "GuildVoiceStates", "GuildMembers"],
 });
 
 // Setup database
@@ -62,7 +62,6 @@ client.on("messageCreate", async (message) => {
 
   const counting = await db.guild.modules.counting.get(message.guildId);
   let countingValue = counting.value;
-  let countingChannel = counting.channel;
   let countingUser = counting.user;
 
   // if user is the same as the counting user fail the message
@@ -143,6 +142,29 @@ client.once("ready", () => {
 
   // Kickstart activity
   client.user.setActivity(`v${version}`, { type: ActivityType.Watching });
+
+  try {
+    // Fetch all guilds and members
+    client.guilds.cache.forEach(async (guild) => {
+      await db.guild.add(guild.id);
+
+      guild.members.fetch().then((members) => {
+        members.forEach(async (member) => {
+          await db.guild.member.add(guild.id, member.id);
+        });
+      });
+    });
+  } catch (error: any) {
+    logger.error(error);
+  } finally {
+    logger.deploy("All guilds and members fetched");
+  }
+});
+
+// Event when member joins guild
+client.on("guildMemberAdd", async (member) => {
+  await db.guild.member.add(member.guild.id, member.id);
+  logger.custom("GUILD", "#F2B75C", "", `Member joined ${member.user.username}`);
 });
 
 /* check every 10 minutes if someone is in a voice chat and give them points
@@ -167,6 +189,11 @@ setInterval(() => {
 // Event when client joins guild
 client.on("guildCreate", (guild) => {
   db.guild.add(guild.id);
+  guild.members.fetch().then((members) => {
+    members.forEach(async (member) => {
+      await db.guild.member.add(guild.id, member.id);
+    });
+  });
   logger.custom("GUILD", "#F2B75C", "", `Joined guild ${guild.name}`);
 });
 
