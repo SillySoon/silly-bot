@@ -4,7 +4,7 @@ import {
   EmbedBuilder,
   CacheType,
 } from "discord.js";
-import { db } from "../../utils/db";
+import { db } from "../../database";
 
 export const data = new SlashCommandBuilder()
   .setName("leaderboard")
@@ -29,7 +29,7 @@ export async function execute(interaction: CommandInteraction) {
 }
 
 async function cookieLeaderboard(interaction: CommandInteraction) {
-  const users = await db.getTopPoints(interaction.guildId, 10);
+  const users = await db.points.getTop(interaction.guildId, 10);
 
   const embed = new EmbedBuilder()
     .setColor("#eeeee4")

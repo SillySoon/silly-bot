@@ -3,7 +3,7 @@ import { Client, ActivityType, Collection } from "discord.js";
 import { commands } from "./commands";
 import { deployCommands } from "./deploy-commands";
 import { config } from "./utils/config";
-import { db } from "./utils/db";
+import { db } from "./database";
 import { version } from "../package.json";
 import logger from "silly-logger";
 
@@ -11,6 +11,9 @@ import logger from "silly-logger";
 logger.timeFormat("MMM Do YY - h:mm:ss a");
 logger.enableLogFiles(true);
 logger.logFolderPath("./logs");
+
+// Log current bot version
+logger.deploy(`Welcome! This is bot Version: v${version}`);
 
 // Start up a client
 export const client = new Client({
@@ -23,7 +26,7 @@ db.setup();
 // Add points to user when they send a message
 client.on("messageCreate", async (message) => {
   if (message.author.bot) return;
-  db.addPoints(message.author.id, message.guildId, 10);
+  db.points.add(message.author.id, message.guildId, 10);
 });
 
 // Math regex
@@ -54,14 +57,8 @@ client.on("messageCreate", async (message) => {
   const messageContent = calcMath(message.content);
   // console.log(messageContent);
 
-  const guild = await db.getGuild(message.guildId);
-  if (
-    guild == null ||
-    !guild.counting.active ||
-    guild.counting.channel != message.channelId ||
-    isNaN(messageContent)
-  )
-    return;
+  const guild = await db.guild.get(message.guildId);
+  if (guild == null || !guild.counting.active || guild.counting.channel != message.channelId || isNaN(messageContent)) return;
 
   const countingValue = guild.counting.value;
   // if user is the same as the counting user fail the message
@@ -70,21 +67,21 @@ client.on("messageCreate", async (message) => {
     await message.reply(
       "You can't count twice in a row! The counting has been reset. Start from 1 again!"
     );
-    db.setCountingValue(message.guildId, 1);
-    db.setCountingUser(message.guildId, "");
+    db.counting.setValue(message.guildId, 1);
+    db.counting.setUser(message.guildId, "");
     return;
   } else if (messageContent != countingValue.toString()) {
     message.react("<:negative:1203089360644476938>");
     await message.reply(
       "You broke the counting! The counting has been reset. Start from 1 again!"
     );
-    db.setCountingValue(message.guildId, 1);
-    db.setCountingUser(message.guildId, "");
+    db.counting.setValue(message.guildId, 1);
+    db.counting.setUser(message.guildId, "");
   } else {
     message.react("<:positive:1203089362833768468>");
-    db.addPoints(message.author.id, message.guildId, 5);
-    db.setCountingValue(message.guildId, countingValue + 1);
-    db.setCountingUser(message.guildId, message.author.id);
+    db.points.add(message.author.id, message.guildId, 5);
+    db.counting.setValue(message.guildId, countingValue + 1);
+    db.counting.setUser(message.guildId, message.author.id);
   }
 });
 
@@ -150,7 +147,7 @@ setInterval(() => {
     guild.voiceStates.cache.forEach(voiceState => {
       const member = voiceState.member;
       if (member) {
-        db.addPoints(member.id, guild.id, 30);
+        db.points.add(member.id, guild.id, 30);
         logger.custom(
           "VOICE",
           "#7EF0E0",
@@ -164,13 +161,13 @@ setInterval(() => {
 
 // Event when client joins guild
 client.on("guildCreate", (guild) => {
-  db.addGuild(guild.id);
+  db.guild.add(guild.id);
   logger.custom("GUILD", "#F2B75C", "", `Joined guild ${guild.name}`);
 });
 
 // Event when client leaves guild
 client.on("guildDelete", (guild) => {
-  db.deleteGuild(guild.id);
+  db.guild.remove(guild.id);
   logger.custom("GUILD", "#F2B75C", "", `Left guild ${guild.name}`);
 });
 

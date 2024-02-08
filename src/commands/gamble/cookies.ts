@@ -3,14 +3,14 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
 } from "discord.js";
-import { db } from "../../utils/db";
+import { db } from "../../database";
 
 export const data = new SlashCommandBuilder()
   .setName("cookies")
   .setDescription("See how many cookies you have!");
 
 export async function execute(interaction: CommandInteraction) {
-  const points = await db.getPoints(interaction.user.id, interaction.guildId);
+  const points = await db.points.get(interaction.user.id, interaction.guildId);
 
   const embed = new EmbedBuilder()
     .setColor("#eeeee4")

@@ -3,7 +3,7 @@ import {
   SlashCommandBuilder,
   EmbedBuilder,
 } from "discord.js";
-import { db } from "../../utils/db";
+import { db } from "../../database";
 import * as logger from "silly-logger";
 
 export const data = new SlashCommandBuilder()
@@ -31,7 +31,7 @@ export async function execute(interaction: CommandInteraction) {
   }
 
   // Get the user's points
-  db.getPoints(interaction.user.id, interaction.guildId).then((points) => {
+  db.points.get(interaction.user.id, interaction.guildId).then((points) => {
     if (points < amount) {
       const embed = new EmbedBuilder()
         .setColor("#eeeee4")
@@ -63,7 +63,7 @@ export async function execute(interaction: CommandInteraction) {
             points + Number(amount)
           } cookies in your balance!`
         );
-        db.addPoints(interaction.user.id, interaction.guildId, Number(amount));
+        db.points.add(interaction.user.id, interaction.guildId, Number(amount));
       } else if (random === 1) {
         embed.setTitle(`<:special:1203137023196663908> Special Win! (4x)`);
         embed.setDescription(
@@ -71,7 +71,7 @@ export async function execute(interaction: CommandInteraction) {
             points + Number(amount) * 4
           } cookies in your balance!`
         );
-        db.addPoints(
+        db.points.add(
           interaction.user.id,
           interaction.guildId,
           Number(amount) * 4
@@ -83,7 +83,7 @@ export async function execute(interaction: CommandInteraction) {
             points - Number(amount)
           } cookies in your balance!`
         );
-        db.addPoints(interaction.user.id, interaction.guildId, Number(-amount));
+        db.points.add(interaction.user.id, interaction.guildId, Number(-amount));
       }
 
       return interaction.reply({ embeds: [embed] });
